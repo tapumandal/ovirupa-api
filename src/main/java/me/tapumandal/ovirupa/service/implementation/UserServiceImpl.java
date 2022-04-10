@@ -76,6 +76,7 @@ public class UserServiceImpl implements UserService {
     public LoginResponseModelConsumer createUser(User user) {
 
         System.out.println("S 1:"+new Gson().toJson(user));
+        System.out.println("PASS:"+new Gson().toJson(user.getPassword()));
 
         String previousPass = user.getPassword();
 
@@ -107,7 +108,7 @@ public class UserServiceImpl implements UserService {
             userDetails = myuserDetailsService.loadUserByUsername(user.getUsername());
             loginResponseModel = new LoginResponseModelConsumer();
             loginResponseModel.setJwt(jwtUtil.generateToken(userDetails));
-            loginResponseModel.setUser(convertToDto(user));
+            loginResponseModel.setUser(user);
         }
         System.out.println("S RETURN");
         return loginResponseModel;
@@ -149,7 +150,7 @@ public class UserServiceImpl implements UserService {
             userDetails = myuserDetailsService.loadUserByUsername(user.getUsername());
             loginResponseModel = new LoginResponseModelConsumer();
             loginResponseModel.setJwt(jwtUtil.generateToken(userDetails));
-            loginResponseModel.setUser(convertToDto(user));
+            loginResponseModel.setUser(user);
 
         }
         return loginResponseModel;
@@ -442,7 +443,7 @@ public class UserServiceImpl implements UserService {
         userDetails = myuserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
         LoginResponseModelConsumer loginResponseModel = new LoginResponseModelConsumer();
         loginResponseModel.setJwt(jwtUtil.generateToken(userDetails));
-        loginResponseModel.setUser(convertToDto(user));
+        loginResponseModel.setUser(user);
 
         return loginResponseModel;
     }
@@ -465,7 +466,7 @@ public class UserServiceImpl implements UserService {
 
             userDetails = myuserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
             loginResponseModel.setJwt(jwtUtil.generateToken(userDetails));
-            loginResponseModel.setUser(convertToDto(user));
+            loginResponseModel.setUser(user);
 
         }else{
             System.out.println("NOT AUTHENTICATED");

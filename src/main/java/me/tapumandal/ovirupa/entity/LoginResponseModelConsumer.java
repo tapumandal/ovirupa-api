@@ -6,7 +6,7 @@ public class LoginResponseModelConsumer {
 
     private String jwt;
 
-    private ConsumerUserDto user;
+    private User user;
 
     public String getJwt() {
         return jwt;
@@ -16,11 +16,11 @@ public class LoginResponseModelConsumer {
         this.jwt = jwt;
     }
 
-    public ConsumerUserDto getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(ConsumerUserDto user) {
+    public void setUser(User user) {
         this.user = user;
     }
 }

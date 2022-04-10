@@ -1,6 +1,7 @@
 package me.tapumandal.ovirupa.controller.v1;
 
 import com.google.gson.Gson;
+import me.tapumandal.ovirupa.entity.LoginResponseModel;
 import me.tapumandal.ovirupa.entity.LoginResponseModelConsumer;
 import me.tapumandal.ovirupa.entity.dto.ConsumerUserDto;
 import me.tapumandal.ovirupa.entity.dto.UserDto;
@@ -26,6 +27,7 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api/v1")
@@ -44,47 +46,68 @@ public class UserController extends ControllerHelper {
     @Autowired
     UserService userService;
 
-    @Autowired
-    ModelMapper modelMapper;
+    @PostMapping("/authenticate")
+    public ResponseEntity<LoginResponseModel> authenticate(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
 
-    @Autowired
-    ApplicationPreferences applicationPreferences;
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            throw new Exception("Incorrect username or password", e);
+        }
 
-    @PostMapping("admin/authenticate")
-    public ResponseEntity<LoginResponseModelConsumer> authenticate(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
-        LoginResponseModelConsumer loginResponseModel = userService.adminAuthenticate(authenticationRequest);
+        userDetails = myuserDetailsService.loadUserByUsername(authenticationRequest.getUsername().toString());
+
+        LoginResponseModel loginResponseModel = new LoginResponseModel();
+        loginResponseModel.setJwt(jwtUtil.generateToken(userDetails));
+        loginResponseModel.setUser(userService.getUserByUserName(userDetails.getUsername()));
+
         return ResponseEntity.ok(loginResponseModel);
-
     }
 
-    @PostMapping(path = "admin/registration")
-    public ResponseEntity<LoginResponseModelConsumer> adminRegistration(@RequestBody User u, HttpServletRequest request) throws Exception  {
+    @GetMapping("/")
+    public String home() {
+        return ("<h1>This is the Home Page. </h1> <span>Site is under construction.<span>");
+    }
 
-        u.setRole("Admin");
+    @PostMapping(path = "/registration")
+    public CommonResponseSingle userRegistration(@RequestBody @Valid User userDto, HttpServletRequest request) {
 
-        if (!userService.isUserExist(u.getUsername())) {
-            LoginResponseModelConsumer loginResponseModel = userService.createAdminAccount(u);
-            return ResponseEntity.ok(loginResponseModel);
+        if (!userService.isUserExist(userDto.getUsername())) {
+//            if (userDto.getCompany().getId() != 0) {
+//                return response(false, HttpStatus.BAD_REQUEST, "Please check your company information.", (User) null);
+//            }
+//            User user = userService.createUser(userDto);
+            User user = userService.createAdminAccount(userDto).getUser();
+
+            if (user != null) {
+                return response(true, HttpStatus.CREATED, "User & Company registration successful", user);
+            } else {
+                return response(false, HttpStatus.BAD_REQUEST, "Something is wrong please contact.", (User) null);
+            }
+
         } else {
-            return (ResponseEntity<LoginResponseModelConsumer>) ResponseEntity.badRequest();
+            return response(false, HttpStatus.NOT_ACCEPTABLE, "User already exist", (User) null);
         }
     }
 
-    @PostMapping(path = "user/create")
-    public CommonResponseSingle userCreate(@RequestBody @Valid User u, HttpServletRequest request) {
+    @PostMapping(path = "/user/create")
+    public CommonResponseSingle userCreate(@RequestBody @Valid User userDto, HttpServletRequest request) {
 
         storeUserDetails(request);
 
-        if (!userService.isUserExist(u.getUsername())) {
+        if (!userService.isUserExist(userDto.getUsername())) {
 
-//            u.setCompany(null);
-//            User user = userService.createUser(u);
 
-//            if (user != null) {
-//                return response(true, HttpStatus.CREATED, "User & Company registration successful", user);
-//            } else {
+//            userDto.setCompany(null);
+            User user = userService.createUser(userDto).getUser();
+
+            if (user != null) {
+                return response(true, HttpStatus.CREATED, "User & Company registration successful", user);
+            } else {
                 return response(false, HttpStatus.BAD_REQUEST, "Something is wrong please contact.", (User) null);
-//            }
+            }
 
         } else {
             return response(false, HttpStatus.NOT_ACCEPTABLE, "User already exist", (User) null);
@@ -98,7 +121,6 @@ public class UserController extends ControllerHelper {
 
         User user = userService.getById(id);
 
-
         if (user != null) {
             return response(true, HttpStatus.FOUND, "User by id: " + id, user);
         } else if (user == null) {
@@ -109,7 +131,7 @@ public class UserController extends ControllerHelper {
     }
 
     @GetMapping(path = "user/list")
-    public CommonResponseArray getAll(@ModelAttribute ListFilter listFilter, HttpServletRequest request, Pageable pageable) {
+    public CommonResponseArray getAll(@ModelAttribute ListFilter listFilter,  HttpServletRequest request, Pageable pageable) {
 
         storeUserDetails(request);
 
@@ -127,43 +149,12 @@ public class UserController extends ControllerHelper {
 
     }
 
-    @GetMapping(path = "admin/list")
-    public CommonResponseArray getAllAdmin(HttpServletRequest request) {
-
-        storeUserDetails(request);
-
-        List<User> userList = userService.getAllAdmin();
-
-        if (!userList.isEmpty()) {
-            return response(true, HttpStatus.OK, "All user list", userList, null);
-        } else if (userList.isEmpty()) {
-            return response(true, HttpStatus.NO_CONTENT, "User List is empty", new ArrayList<User>(), null);
-        } else {
-            return response(false, HttpStatus.INTERNAL_SERVER_ERROR, "Something is wrong", new ArrayList<User>(), null);
-        }
-
-    }
-
     @PostMapping(path = "user/update")
-    public CommonResponseSingle updateProduct(@RequestBody User u, HttpServletRequest request) {
+    public CommonResponseSingle updateProduct(@RequestBody User userDto, HttpServletRequest request) {
 
         storeUserDetails(request);
-        User user = userService.update(u);
 
-        if (user != null) {
-            return response(true, HttpStatus.OK, "New user inserted successfully", user);
-        } else if (user == null) {
-            return response(false, HttpStatus.BAD_REQUEST, "Something is wrong with data", (User) null);
-        }
-        return response(false, HttpStatus.INTERNAL_SERVER_ERROR, "Something is wrong with the application", (User) null);
-    }
-
-    @PostMapping(path = "admin/update")
-    public CommonResponseSingle updateAdminProduct(@RequestBody User u, HttpServletRequest request) {
-
-        storeUserDetails(request);
-        User user = userService.updateAdmin(u);
-
+        User user = userService.update(userDto);
 
         if (user != null) {
             return response(true, HttpStatus.OK, "New user inserted successfully", user);
@@ -185,72 +176,119 @@ public class UserController extends ControllerHelper {
         }
     }
 
+    @GetMapping("/user")
+    public String user() {
+        return ("<h1>Welcome User</h1>");
+    }
+
+    @GetMapping("/admin")
+    public String admin() {
+        return ("<h1>Welcome Admin</h1>");
+    }
+
+
+    private boolean validateFirebaseTokenID(String tokenID) {
+        if(tokenID != null && tokenID.length() > 10){
+            return true;
+        }else{
+            return false;
+        }
+//        FirebaseOptions options = null;
+//        try {
+//            options = FirebaseOptions.builder()
+//                    .setCredentials(GoogleCredentials.getApplicationDefault())
+//                    .setDatabaseUrl("https://grocery-ecommerce-845b8.firebaseio.com/")
+//                    .build();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        FirebaseApp.initializeApp(options);
+//
+//        FirebaseToken decodedToken = null;
+//        try {
+//            decodedToken = FirebaseAuth.getInstance().verifyIdToken(userDto.getUserTokenId());
+//        } catch (FirebaseAuthException e) {
+//            e.printStackTrace();
+//        }
+//        String uid = decodedToken.getUid();
+//        System.out.println("Firebase Authentication: "+uid);
+
+    }
+
     @PostMapping(path = "consumer/registration")
-    public ResponseEntity<LoginResponseModelConsumer> consumerRegistration(@RequestBody User u, HttpServletRequest request) throws Exception  {
+    public CommonResponseSingle<LoginResponseModel> consumerRegistration(@RequestBody @Valid User userDto, HttpServletRequest request) throws Exception  {
 
-        u.setRole("CONSUMER");
+        userDto.setRole("CONSUMER");
 
-        if (!userService.isUserExist(u.getUsername())) {
-            LoginResponseModelConsumer loginResponseModel = null;
-            if(ApplicationPreferences.getOTP().equals(u.getOtp())) {
-                u.setPassword(CONSUMER_USER_PASSWORD);
-                loginResponseModel = userService.createUser(u);
+        if(!validateFirebaseTokenID(userDto.getUserTokenId())){
+            return response(false, HttpStatus.BAD_REQUEST, "This is not a valid request.", (LoginResponseModel) null);
+        }
+
+        if (!userService.isUserExist(userDto.getUsername())) {
+            userDto.setPassword(CONSUMER_USER_PASSWORD);
+            User user = userService.createUser(userDto).getUser();
+
+            try {
+                //System.out.println("3");
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(userDto.getUsername(), CONSUMER_USER_PASSWORD)
+                );
+            } catch (BadCredentialsException e) {
+                //System.out.println("4");
+                throw new Exception("Incorrect username or tokenId", e);
             }
-            return ResponseEntity.ok(loginResponseModel);
+            //System.out.println("5");
+            userDetails = myuserDetailsService.loadUserByUsername(user.getUsername());
+            //System.out.println("USER DETAILS: "+new Gson().toJson(userDetails));
+            //System.out.println("JWT: "+jwtUtil.generateToken(userDetails));
+            LoginResponseModel loginResponseModel = new LoginResponseModel();
+            loginResponseModel.setJwt(jwtUtil.generateToken(userDetails));
+            loginResponseModel.setUser(userService.getUserByUserName(userDetails.getUsername()));
+            //System.out.println("6");
+            return response(true, HttpStatus.OK, "Registration is successful", loginResponseModel);
+
         } else {
-            return (ResponseEntity<LoginResponseModelConsumer>) ResponseEntity.badRequest();
+            //System.out.println("7");
+            return response(false, HttpStatus.BAD_REQUEST, "The account is already exist. \n Please login.", (LoginResponseModel) null);
         }
     }
 
     @PostMapping("consumer/authenticate")
-    public ResponseEntity<LoginResponseModelConsumer> consumerAuthenticate(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+    public CommonResponseSingle<LoginResponseModel> consumerAuthenticate(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
 
-        LoginResponseModelConsumer loginResponseModel = null;
-
-        if(ApplicationPreferences.getOTP().equals(authenticationRequest.getOtp())) {
-            try {
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), CONSUMER_USER_PASSWORD)
-                );
-            } catch (BadCredentialsException e) {
-                throw new Exception("Incorrect username or tokenId", e);
-            }
-            userDetails = myuserDetailsService.loadUserByUsername(authenticationRequest.getUsername().toString());
-
-            loginResponseModel = userService.consumerAuthenticate(authenticationRequest);
+        if(!validateFirebaseTokenID(authenticationRequest.getUserTokenId())){
+            return response(false, HttpStatus.BAD_REQUEST, "This is not a valid request.", (LoginResponseModel) null);
         }
 
-        return ResponseEntity.ok(loginResponseModel);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), CONSUMER_USER_PASSWORD)
+            );
+        } catch (BadCredentialsException e) {
+            throw new Exception("Incorrect username or tokenId", e);
+        }
 
+        userDetails = myuserDetailsService.loadUserByUsername(authenticationRequest.getUsername().toString());
+
+        LoginResponseModel loginResponseModel = new LoginResponseModel();
+        loginResponseModel.setJwt(jwtUtil.generateToken(userDetails));
+        loginResponseModel.setUser(userService.getUserByUserName(userDetails.getUsername()));
+        //System.out.println("LOGIN CONTROLELR: "+new Gson().toJson(userService.getUserByUserName(userDetails.getUsername())));
+
+        return response(true, HttpStatus.OK, "Login is successful", loginResponseModel);
     }
 
 
     @PostMapping(path = "consumer/address/update")
-    public CommonResponseSingle<User> updateUserAddress(@RequestBody User u, HttpServletRequest request) {
+    public CommonResponseSingle<User> updateUserAddress(@RequestBody User userDto, HttpServletRequest request) {
 
-        //System.out.println("CONTROLLER ADDRESS DTO: "+new Gson().toJson(u));
+        //System.out.println("CONTROLLER ADDRESS DTO: "+new Gson().toJson(userDto));
         storeUserDetails(request);
 
-        User user = userService.update(u);
-        //System.out.println("CONTROLLER ADDRESS RETURN: "+new Gson().toJson(u));
+        User user = userService.update(userDto);
+        //System.out.println("CONTROLLER ADDRESS RETURN: "+new Gson().toJson(userDto));
         if (user != null) {
-            return response(true, HttpStatus.OK, "New user inserted successfully", user);
-        } else if (user == null) {
-            return response(false, HttpStatus.BAD_REQUEST, "Something is wrong with data", (User) null);
-        }
-        return response(false, HttpStatus.INTERNAL_SERVER_ERROR, "Something is wrong with the application", (User) null);
-    }
-
-    @GetMapping(path = "consumer/myprofile")
-    public CommonResponseSingle<User> getMyProfileConsumer(HttpServletRequest request) {
-
-        storeUserDetails(request);
-
-        int userId = ApplicationPreferences.getUser().getId();
-        User user = userService.getById(userId);
-
-        if (user != null) {
-            user.setPassword("");
             return response(true, HttpStatus.OK, "New user inserted successfully", user);
         } else if (user == null) {
             return response(false, HttpStatus.BAD_REQUEST, "Something is wrong with data", (User) null);
@@ -259,15 +297,13 @@ public class UserController extends ControllerHelper {
     }
 
     @PostMapping(path = "consumer/myprofile")
-    public CommonResponseSingle<User> updateMyProfileConsumer(@ModelAttribute UserDto userDto, HttpServletRequest request) {
-
+    public CommonResponseSingle<User> getMyProfileConsumer(HttpServletRequest request) {
 
         storeUserDetails(request);
 
         int userId = ApplicationPreferences.getUser().getId();
-
-        User user = userService.update(new User(userDto));
-//        User user = userService.update(convertToEntity(userDto));
+        User user = userService.getById(userId);
+        //System.out.println("CONTROLLER MY PROFILE: "+new Gson().toJson(user));
         if (user != null) {
             return response(true, HttpStatus.OK, "New user inserted successfully", user);
         } else if (user == null) {
@@ -275,50 +311,4 @@ public class UserController extends ControllerHelper {
         }
         return response(false, HttpStatus.INTERNAL_SERVER_ERROR, "Something is wrong with the application", (User) null);
     }
-
-    private ConsumerUserDto convertToDto(User user) {
-        ConsumerUserDto consumerUserDto = modelMapper.map(user, ConsumerUserDto.class);
-        return consumerUserDto;
-    }
-
-    private User convertToEntity(UserDto userDto) {
-        User user = modelMapper.map(userDto, User.class);
-        return user;
-    }
-
-    @PostMapping("consumer/access")
-    public ResponseEntity<LoginResponseModelConsumer> consumerAccess(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
-
-        System.out.println("C 1:"+new Gson().toJson(authenticationRequest));
-        LoginResponseModelConsumer loginResponseModel = null;
-        if(ApplicationPreferences.getOTP().equals(authenticationRequest.getOtp())) {
-            System.out.println("MATCHED");
-            authenticationRequest.setPassword(CONSUMER_USER_PASSWORD);
-            if (!userService.isUserExist(authenticationRequest.getUsername())) {
-                System.out.println("NOT EXIST");
-                User user = new User();
-                user.setPassword(CONSUMER_USER_PASSWORD);
-                user.setUsername(authenticationRequest.getUsername());
-                user.setName(authenticationRequest.getUsername());
-                loginResponseModel = userService.createUser(user);
-                return ResponseEntity.ok(loginResponseModel);
-            }else {
-//                try {
-//                    System.out.println("TRYING");
-//                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), CONSUMER_USER_PASSWORD)
-//                    );
-//                } catch (BadCredentialsException e) {
-//                    System.out.println("CATCH");
-//                    throw new Exception("Incorrect username or tokenId", e);
-//                }
-                //                userDetails = myuserDetailsService.loadUserByUsername(authenticationRequest.getUsername().toString());
-                System.out.println("EXIST");
-                loginResponseModel = userService.consumerAuthenticate(authenticationRequest);
-            }
-        }
-        System.out.println("C RETURN");
-        return ResponseEntity.ok(loginResponseModel);
-
-    }
-
 }

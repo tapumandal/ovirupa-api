@@ -6,6 +6,13 @@ public class LoginResponseModel {
 
     private User user;
 
+    public LoginResponseModel(){}
+
+    public LoginResponseModel(LoginResponseModelConsumer loginResponseModel) {
+        this.jwt = loginResponseModel.getJwt();
+        this.user = new User(loginResponseModel.getUser());
+    }
+
     public String getJwt() {
         return jwt;
     }

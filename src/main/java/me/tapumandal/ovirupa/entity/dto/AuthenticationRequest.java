@@ -16,6 +16,8 @@ public class AuthenticationRequest {
 
     private String otp;
 
+    protected String userTokenId;
+
 
     public AuthenticationRequest(){}
 

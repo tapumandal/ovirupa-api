@@ -76,7 +76,7 @@ public class ProductController extends ControllerHelper<Product> {
     public CommonResponseSingle updateProduct(@ModelAttribute ProductDto productDto, HttpServletRequest request) {
         System.out.println(new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z").format(new Date(System.currentTimeMillis())));
         System.out.println("PRODUCT CONTROLLER: updateProduct");
-        System.out.println("ProductDto: "+new Gson().toJson(productDto));
+//        System.out.println("ProductDto: "+new Gson().toJson(productDto));
 
         //System.out.println("Controller Update");
         //System.out.println(new Gson().toJson(productDto));

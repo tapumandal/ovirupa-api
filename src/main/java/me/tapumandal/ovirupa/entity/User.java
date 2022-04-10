@@ -4,14 +4,19 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import lombok.Data;
+import me.tapumandal.ovirupa.domain.ref_code.RefCodeReward;
+import me.tapumandal.ovirupa.entity.dto.ConsumerUserDto;
 import me.tapumandal.ovirupa.entity.dto.UserDto;
 import me.tapumandal.ovirupa.domain.address.Address;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.validator.constraints.Length;
 
 @Data
 @Entity
@@ -55,7 +60,7 @@ public class User {
 
     //    @Size(min=6, max = 32, message = "Password size must be between 6 and 32 character.")
     @Column(name = "password")
-    @NotNull(message = "password No can't be empty")
+    @Nullable
     protected String password;
 
     @Column(name = "work_title")
@@ -66,6 +71,9 @@ public class User {
 
     @Column(name = "otp")
     protected String otp;
+
+    @Column(name="user_token_id", length = 1200)
+    protected String userTokenId;
 
     @Column(name = "is_active", columnDefinition = "boolean default 1")
     private boolean isActive = false;
@@ -103,13 +111,26 @@ public class User {
         this.city = userDto.getCity();
     }
 
-//    @OneToOne(cascade = CascadeType.ALL)
-//    @JoinColumn(name = "ref_code_id", referencedColumnName = "id")
-//    private RefCodeReward refCodeReward;
-//
-//    @OneToOne(cascade = CascadeType.ALL)
-//    @JoinColumn(name = "user_promo_id", referencedColumnName = "id")
-//    private UserPromo userPromo;
+    public User(ConsumerUserDto user) {
+        this.name = user.getName();
+        this.username = user.getUsername();
+        this.email = user.getEmail();
+        this.phoneNumberCode = user.getPhoneNumberCode();
+        this.phoneNumber = user.getPhoneNumber();
+        this.role = user.getRole();
+        this.isActive = user.is_active();
+        this.isDeleted = user.is_deleted();
+        this.address = user.getAddress();
+        this.city = user.getCity();
+    }
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "ref_code_id", referencedColumnName = "id")
+    private RefCodeReward refCodeReward;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_promo_id", referencedColumnName = "id")
+    private UserPromo userPromo;
 
 
     public boolean isActive() {
