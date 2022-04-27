@@ -14,8 +14,8 @@ public class CloudMessagingDto implements Serializable {
     @SerializedName("id")
     protected int id;
 
-    protected String notificationTitle = "";
-    protected String notificationText = "";
-    protected String notificationImage = "";
-    protected String notificationNameOptional = "";
+    String notificationTitle = "";
+    String notificationText = "";
+    String notificationImage = "";
+    String notificationNameOptional = "";
 }

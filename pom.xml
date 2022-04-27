@@ -100,11 +100,11 @@
 			<artifactId>thumbnailator</artifactId>
 			<version>0.4.11</version>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>com.google.firebase</groupId>-->
-<!--			<artifactId>firebase-admin</artifactId>-->
-<!--			<version>7.0.1</version>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>7.0.1</version>
+		</dependency>
 		<dependency>
 			<groupId>com.auth0</groupId>
 			<artifactId>java-jwt</artifactId>

@@ -86,6 +86,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(apiVersionUrl+"/slider/get").permitAll()
                 .antMatchers(apiVersionUrl+"/highlight/**").permitAll()
                 .antMatchers(apiVersionUrl+"/highlight/get").permitAll()
+                .antMatchers(apiVersionUrl+"/live/**").permitAll()
+                .antMatchers(apiVersionUrl+"/live/get").permitAll()
                 .antMatchers(apiVersionUrl+"/dashboard").hasAnyAuthority("ADMIN", "CONSUMER")
                 .antMatchers(apiVersionUrl+"/admin").hasAnyAuthority("ADMIN")
                 .antMatchers(apiVersionUrl+"/user").hasAnyAuthority("CONSUMER")

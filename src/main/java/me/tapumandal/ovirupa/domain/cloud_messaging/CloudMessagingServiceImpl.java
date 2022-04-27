@@ -7,6 +7,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
+import com.google.gson.Gson;
 import me.tapumandal.ovirupa.domain.fcm_registration_token.FCMRegistrationToken;
 import me.tapumandal.ovirupa.domain.fcm_registration_token.FCMRegistrationTokenRepository;
 import me.tapumandal.ovirupa.entity.ListFilter;
@@ -77,7 +78,8 @@ public class CloudMessagingServiceImpl implements CloudMessagingService {
 
     public String sendNotification(CloudMessaging note, String token) throws FirebaseMessagingException {
 
-        //System.out.println(token);
+        System.out.println("NOTIFICAION:"+token);
+        System.out.println(new Gson().toJson( note));
 
         Notification notification = Notification
                 .builder()
@@ -157,12 +159,12 @@ public class CloudMessagingServiceImpl implements CloudMessagingService {
     @Bean
     FirebaseMessaging firebaseMessaging() throws IOException {
         GoogleCredentials googleCredentials = GoogleCredentials
-                .fromStream(new ClassPathResource("super-haat-firebase-adminsdk-jmvqp-1579a96ba0.json").getInputStream());
+                .fromStream(new ClassPathResource("ovirupa-app-firebase-adminsdk-1exm1-fa48810f7f.json").getInputStream());
         FirebaseOptions firebaseOptions = FirebaseOptions
                 .builder()
                 .setCredentials(googleCredentials)
                 .build();
-        FirebaseApp app = FirebaseApp.initializeApp(firebaseOptions, "Super Haat");
+        FirebaseApp app = FirebaseApp.initializeApp(firebaseOptions, "Ovirupa");
         return FirebaseMessaging.getInstance(app);
     }
 

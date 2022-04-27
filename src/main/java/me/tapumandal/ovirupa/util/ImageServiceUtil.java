@@ -46,22 +46,24 @@ public class ImageServiceUtil {
     }
 
     public ImageModel createThumbnail(MultipartFile file) {
-        String thumbnailName = "thumbnail_"+String.valueOf(Instant.now().getEpochSecond());
+        String timeSuffix = String.valueOf(Instant.now().getEpochSecond());
+        String thumbnailName = "thumbnail_"+timeSuffix;
         thumbnailName = fileStorageService.storeFile(file, thumbnailName);
 
         if(file.getSize()>10000) {
             try {
                 Thumbnails.of(new File(productFileUploadDir+"/"+thumbnailName))
                         .outputFormat("JPEG")
-                        .size(400, 600)
+                        .size(800, 800)
 //                        .crop(Positions.CENTER)
 //                        .keepAspectRatio(true)
-                        .outputQuality(0.7)
+//                        .outputQuality(0.7)
                         .toFiles(Rename.NO_CHANGE);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        fileStorageService.storeFile(file, "original_"+timeSuffix);
 
         return createImageModel(thumbnailName);
     }

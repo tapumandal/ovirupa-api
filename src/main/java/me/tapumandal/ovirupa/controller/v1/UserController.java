@@ -46,7 +46,7 @@ public class UserController extends ControllerHelper {
     @Autowired
     UserService userService;
 
-    @PostMapping("/authenticate")
+    @PostMapping("/admin/authenticate")
     public ResponseEntity<LoginResponseModel> authenticate(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
 
         try {
@@ -71,7 +71,7 @@ public class UserController extends ControllerHelper {
         return ("<h1>This is the Home Page. </h1> <span>Site is under construction.<span>");
     }
 
-    @PostMapping(path = "/registration")
+    @PostMapping(path = "/admin/registration")
     public CommonResponseSingle userRegistration(@RequestBody @Valid User userDto, HttpServletRequest request) {
 
         if (!userService.isUserExist(userDto.getUsername())) {

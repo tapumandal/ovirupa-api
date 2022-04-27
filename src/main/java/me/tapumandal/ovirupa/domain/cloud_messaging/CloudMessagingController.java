@@ -1,5 +1,6 @@
 package me.tapumandal.ovirupa.domain.cloud_messaging;
 
+import com.google.gson.Gson;
 import me.tapumandal.ovirupa.util.CommonResponseSingle;
 import me.tapumandal.ovirupa.util.ControllerHelper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,8 @@ public class CloudMessagingController extends ControllerHelper<CloudMessaging> {
     public CommonResponseSingle createFCMRegistrationToken(@ModelAttribute CloudMessagingDto cloudMessagingDto, HttpServletRequest request) {
 
 
-        //System.out.println("Cloud Messaging Controller:");
-        //System.out.println(new Gson().toJson(cloudMessagingDto));
+        System.out.println("Cloud Messaging Controller XX:");
+        System.out.println(new Gson().toJson(cloudMessagingDto));
 
         storeUserDetails(request);
         CloudMessaging cloudMessaging = cloudMessagingService.create(cloudMessagingDto);
